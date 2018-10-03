@@ -9,11 +9,19 @@ class App extends React.Component{
   constructor(props){
     super(props);
     this.state = {
-      currentList: exampleVideoData,
+      currentList: [],
       video: exampleVideoData[0],
       term: ''
     };
-    // this.handleClick = this.handleClick.bind(this);
+    this.updateVideoPlayer = this.updateVideoPlayer.bind(this);
+  }
+
+  componentDidMount() {
+    searchYouTube({
+      query: 'cats',
+      key: YOUTUBE_API_KEY,
+      max: 5,
+    }, this.updateVideoPlayer);
   }
   
   handleSearch(e){
@@ -21,21 +29,16 @@ class App extends React.Component{
     this.setState({
       term: searchInput
     });
-  }
-
-  handleSearchClick(e){
-    e.stopPropagation();
     var searchObj = {
-        query: this.state.term,
-        key: YOUTUBE_API_KEY,
-        max: 5,
+      query: this.state.term,
+      key: YOUTUBE_API_KEY,
+      max: 5,
     };
-    searchYouTube(searchObj, this.updateVideoPlayer.bind(this))
+    var debounced = _.debounce(()=>searchYouTube(searchObj, this.updateVideoPlayer), 500);
+    debounced();
   }
 
   updateVideoPlayer(data){
-    console.log(data.items);
-    console.log(exampleVideoData);
     this.setState({
       currentList: data.items,
       video: data.items[0]
@@ -46,7 +49,7 @@ class App extends React.Component{
     e.stopPropagation();
     var clickedVideoId = e.target.id;
     var playVideoObj = {};
-    exampleVideoData.forEach(function(el){
+    this.state.currentList.forEach(function(el){
         if(el.id.videoId === clickedVideoId){
             playVideoObj = el;
         }
@@ -60,7 +63,7 @@ class App extends React.Component{
       <div>
         <nav className="navbar">
           <div className="col-md-6 offset-md-3">
-            <Search handleSearch={this.handleSearch.bind(this)} handleSearchClick={this.handleSearchClick.bind(this)}/>
+            <Search handleSearch={this.handleSearch.bind(this)} />
           </div>
         </nav>
         <div className="row">
